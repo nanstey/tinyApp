@@ -5,3 +5,23 @@
   <title>TinyApp</title>
 </head>
 <body style="font-size:20px; padding:50px;">
+  <div >
+    <h1 style="text-align: center">TinyApp</h1>
+    <% if (locals.username) { %>
+      Hello, <%= username %>!
+      <div style="float:right;">
+        <form method="POST" action='/logout'>
+          <button type="submit">Logout</button>
+        </form>
+      </div>
+    <% } else { %>
+      <div>
+        <form method="POST" action='/login'>
+          <input type="text" name="username" placeholder="username">
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    <% } %>
+  </div>
+  &nbsp;
+  <hr>

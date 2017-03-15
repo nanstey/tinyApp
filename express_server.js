@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 const bodyParser = require("body-parser");
-var cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser')
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
@@ -18,10 +18,7 @@ var urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  if (req.cookies["username"]){
-    res.redirect('/urls/')
-  }
-  res.redirect('/login')
+  req.cookies["username"] ? res.redirect('/urls') : res.redirect('/login');
 });
 
 app.get("/urls", (req, res) => {
@@ -46,17 +43,20 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  if (req.cookies["username"]){
-    let templateVars = {
-      shortURL: req.params.id,
-      longURL: urlDatabase[req.params.id],
-      username: req.cookies["username"]
-    };
-
-
-    res.render("urls_show", templateVars);
+  if ( req.cookies["username"] ){
+    if ( urlDatabase.hasOwnProperty(req.params.id) ) {
+      let templateVars = {
+        shortURL: req.params.id,
+        longURL: urlDatabase[req.params.id],
+        username: req.cookies["username"]
+      };
+      res.render("urls_show", templateVars);
+    } else {
+      res.redirect('/404');
+    }
+  } else {
+    res.redirect('/error');
   }
-  res.redirect('/error')
 });
 
 app.get("/u/:id", (req, res) => {
@@ -64,36 +64,51 @@ app.get("/u/:id", (req, res) => {
   let longURL = urlDatabase[shortURL];
   if (longURL){
     res.redirect(longURL);
+  } else {
+    res.redirect("/404");
   }
-  res.redirect("/404");
-
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  let shortURL = generateRandomString();
-  let longURL = req.body['longURL'];
-  urlDatabase[shortURL] = longURL;
-  res.redirect('/urls/' + shortURL);
+  if ( req.cookies["username"] ){
+    let shortURL = generateRandomString();
+    let longURL = req.body['longURL'];
+    urlDatabase[shortURL] = longURL;
+    res.redirect('/urls/' + shortURL);
+  } else {
+    res.redirect('/error');
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
-  console.log(req.body);
-  let shortURL = req.params.id;
-  let longURL = req.body['longURL'];
-  urlDatabase[shortURL] = longURL;
-  res.redirect('/urls/')
+  if ( req.cookies["username"] ){
+    console.log(req.body);
+    let shortURL = req.params.id;
+    let longURL = req.body['longURL'];
+    urlDatabase[shortURL] = longURL;
+    res.redirect('/urls/');
+  } else {
+    res.redirect('/error');
+  }
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  let shortURL = req.params.id;
-  delete urlDatabase[shortURL];
-  res.redirect('/urls/');
+  if ( req.cookies["username"] ){
+    console.log(req.body);  // debug statement to see POST parameters
+    let shortURL = req.params.id;
+    delete urlDatabase[shortURL];
+    res.redirect('/urls/');
+  } else {
+    res.redirect('/error');
+  }
 });
 
 app.get("/login", (req, res) => {
-  res.render('urls_login');
+  if ( req.cookies["username"] ){
+    res.redirect('/');
+  } else {
+    res.render('login');
+  }
 });
 
 app.get("/register", (req, res) => {
@@ -127,7 +142,7 @@ app.get("/404", (req, res) => {
 });
 
 app.get("*", (req, res) => {
-  redirect("/404");
+  res.redirect("/404");
 });
 
 app.listen(PORT, () => {

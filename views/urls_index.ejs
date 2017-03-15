@@ -1,11 +1,15 @@
 <%- include('partials/_header') %>
 
-    <!-- Add your EJS code here -->
+    <div>
+      <a href="/urls/new">Create New Link</a>
+    </div>
+    &nbsp;
     <table>
 
       <% for (var key in urls) { %>
         <tr>
-          <td><a href=/urls/<%= key %>><%= key %></a> &#8594;</td>
+          <td><a href=/u/<%= key %>><%= key %></a></td>
+          <td> &#8594;</td>
           <td><a href=<%= urls[key] %>><%= urls[key] %></a></td>
           <td><a href=/urls/<%= key %>>Edit</a></td>
           <td><form method="POST" action=/urls/<%= key %>/delete> <button type="submit">Delete</button></form> </td>
@@ -13,8 +17,5 @@
       <% } %>
     </table>
 
-    &nbsp;
-    <div>
-      <a href="/urls/new">Create New Link</a>
-    </div>
+
 <%- include('partials/_footer.ejs') %>

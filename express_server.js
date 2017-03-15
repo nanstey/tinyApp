@@ -17,20 +17,11 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/login", (req, res) => {
-  res.render('urls_login');
-});
-
 app.get("/", (req, res) => {
   if (req.cookies["username"]){
     res.redirect('/urls/')
   }
-  res.redirect('/error')
-});
-
-app.get("/error", (req, res) => {
-  res.status(401);
-  res.render('error');
+  res.redirect('/login')
 });
 
 app.get("/urls", (req, res) => {
@@ -48,7 +39,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   if (req.cookies["username"]){
     let templateVars = { username: req.cookies["username"] };
-    res.render("urls_new");
+    res.render("urls_new", templateVars);
   } else {
     res.redirect('/error')
   }
@@ -57,28 +48,25 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   if (req.cookies["username"]){
     let templateVars = {
-      shortURL: req.params.id, longURL:
-      urlDatabase[req.params.id],
+      shortURL: req.params.id,
+      longURL: urlDatabase[req.params.id],
       username: req.cookies["username"]
     };
+
+
     res.render("urls_show", templateVars);
-  } else {
-    res.redirect('/error')
   }
+  res.redirect('/error')
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  let shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL];
-  res.redirect(longURL);
-});
-
-app.post("/urls/:id", (req, res) => {
-  console.log(req.body);
+app.get("/u/:id", (req, res) => {
   let shortURL = req.params.id;
-  let longURL = req.body['longURL'];
-  urlDatabase[shortURL] = longURL;
-  res.redirect('/urls/')
+  let longURL = urlDatabase[shortURL];
+  if (longURL){
+    res.redirect(longURL);
+  }
+  res.redirect("/404");
+
 });
 
 app.post("/urls", (req, res) => {
@@ -89,11 +77,31 @@ app.post("/urls", (req, res) => {
   res.redirect('/urls/' + shortURL);
 });
 
+app.post("/urls/:id", (req, res) => {
+  console.log(req.body);
+  let shortURL = req.params.id;
+  let longURL = req.body['longURL'];
+  urlDatabase[shortURL] = longURL;
+  res.redirect('/urls/')
+});
+
 app.post("/urls/:id/delete", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
   let shortURL = req.params.id;
   delete urlDatabase[shortURL];
   res.redirect('/urls/');
+});
+
+app.get("/login", (req, res) => {
+  res.render('urls_login');
+});
+
+app.get("/register", (req, res) => {
+  res.redirect('/');
+});
+
+app.post("/register", (req, res) => {
+  res.redirect('/');
 });
 
 app.post("/login", (req, res) => {
@@ -107,9 +115,20 @@ app.post("/logout", (req, res) => {
   res.redirect('/login');
 });
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
+app.get("/error", (req, res) => {
+  res.status(401);
+  res.render('error');
+});
+
+app.get("/404", (req, res) => {
+  let templateVars = { username: req.cookies["username"] };
+  res.status(404);
+  res.render('404', templateVars);
+});
+
+app.get("*", (req, res) => {
+  redirect("/404");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

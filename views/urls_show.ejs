@@ -1,0 +1,9 @@
+<%- include('partials/_header') %>
+  <!-- Add your EJS code here -->
+  <h2>ShortURL: <b><%= shortURL %></b></h2>
+  <form method="POST" action=/urls/<%= shortURL %>>
+    <input type="text" name="longURL" value=<%=  longURL %>>
+    <button type="submit">Update</button>
+  </form>
+
+<%- include('partials/_footer.ejs') %>

@@ -44,7 +44,8 @@ app.get("/urls", (req, res) => {
     };
     res.render("urls_index", templateVars);
   } else {
-    res.redirect('/error')
+    // User not logged in
+    res.redirect('/error');
   }
 });
 
@@ -53,6 +54,7 @@ app.get("/urls/new", (req, res) => {
     let templateVars = { user: users[ req.cookies["user_id"] ]  };
     res.render("urls_new", templateVars);
   } else {
+    // User not logged in
     res.redirect('/error')
   }
 });
@@ -67,9 +69,11 @@ app.get("/urls/:id", (req, res) => {
       };
       res.render("urls_show", templateVars);
     } else {
+      // Not found
       res.redirect('/404');
     }
   } else {
+    // User not logged in
     res.redirect('/error');
   }
 });
@@ -80,6 +84,7 @@ app.get("/u/:id", (req, res) => {
   if (longURL){
     res.redirect(longURL);
   } else {
+    // Not found
     res.redirect("/404");
   }
 });
@@ -91,6 +96,7 @@ app.post("/urls", (req, res) => {
     urlDatabase[shortURL] = longURL;
     res.redirect('/urls/' + shortURL);
   } else {
+    // User not logged in
     res.redirect('/error');
   }
 });
@@ -103,6 +109,7 @@ app.post("/urls/:id", (req, res) => {
     urlDatabase[shortURL] = longURL;
     res.redirect('/urls/');
   } else {
+    // User not logged in
     res.redirect('/error');
   }
 });
@@ -114,22 +121,27 @@ app.post("/urls/:id/delete", (req, res) => {
     delete urlDatabase[shortURL];
     res.redirect('/urls/');
   } else {
+    // User not logged in
     res.redirect('/error');
   }
 });
 
 app.get("/login", (req, res) => {
   if ( req.cookies["user_id"] ){
+    // Logged in
     res.redirect('/');
   } else {
+    // Not logged in
     res.render('login');
   }
 });
 
 app.get("/register", (req, res) => {
   if ( req.cookies["user_id"] ){
+    // Logged in
     res.redirect('/');
   } else {
+    // Not logged in
     res.render('register');
   }
 });
@@ -144,12 +156,14 @@ app.post("/register", (req, res) => {
     let password = req.body.password;
     // Email or Password empty
     if (email === '' || password === ''){
+      let templateVars = { error_msg: "Email or Password field empty." };
       res.status(400);
-      res.send("Email or Password field empty. <a href='/register'>Please try again</a>.");
+      res.redirect('/error', templateVars);
     } else if ( findUserIdByEmail(email) ){
       // User already exists
+      let templateVars = { error_msg: "Email already in use." };
       res.status(400);
-      res.send("Email already in use. <a href='/register'>Please try again</a>, or <a href='/login'>Login</a>");
+      res.redirect('/error', templateVars);
     } else {
       // Create user
       let id = generateRandomString();
@@ -182,7 +196,7 @@ app.post("/login", (req, res) => {
       res.redirect('/')
     } else {
       // Email address not found, or password doesn't match
-      let templateVars = { error_msg: "Password and email don't match user." }
+      let templateVars = { error_msg: "Password and email don't match user." };
       res.status(401);
       res.render('error', templateVars);
     }

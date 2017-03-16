@@ -1,8 +1,12 @@
 <%- include('partials/_header') %>
 
 <p>
-  <%= error_msg %>
-  Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
+  <% if locals.error_msg { %>
+    <%= error_msg %>
+  <% } else { %>
+    Something went wrong.
+  <% } %>
+   Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
 </p>
 
 <%- include('partials/_footer') %>

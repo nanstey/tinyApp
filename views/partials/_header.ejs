@@ -23,19 +23,17 @@
 <body>
   <div >
     <a href="/"><h1>TinyApp</h1></a>
-    <% if (locals.username) { %>
-      Hello, <%= username %>!
+    <% if (locals.user) { %>
+      Hello, <%= user.name %>!
       <div style="float:right;">
         <form method="POST" action='/logout'>
           <button type="submit">Logout</button>
         </form>
       </div>
     <% } else { %>
-      <div>
-        <form method="POST" action='/login'>
-          <input type="text" name="username" placeholder="username">
+      <div style="float:right;">
+          <a href="/register"><button type="submit">Register</button></a>
           <button type="submit">Login</button>
-        </form>
       </div>
     <% } %>
   </div>

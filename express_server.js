@@ -197,7 +197,7 @@ app.post("/login", (req, res) => {
     } else {
       // Email address not found, or password doesn't match
       let templateVars = { error_msg: "Password and email don't match user." };
-      res.status(401);
+      res.status(403);
       res.render('error', templateVars);
     }
   }

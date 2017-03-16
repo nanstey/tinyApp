@@ -1,7 +1,7 @@
 <%- include('partials/_header') %>
 
 <p>
-  <% if locals.error_msg { %>
+  <% if (locals.error_msg) { %>
     <%= error_msg %>
   <% } else { %>
     Something went wrong.

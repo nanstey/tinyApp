@@ -17,6 +17,22 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  "egEt9K": {
+    id: "egEt9K",
+    name: "Rick",
+    email: "Rick@GetSchwifty.com",
+    password: "WubbaLubbaDubDub"
+  },
+ "59tsaS": {
+    id: "59tsaS",
+    name: "Morty",
+    email: "Morty@GetSchwifty.com",
+    password: "OhJeez"
+  }
+}
+
+
 app.get("/", (req, res) => {
   req.cookies["username"] ? res.redirect('/urls') : res.redirect('/login');
 });
@@ -112,11 +128,44 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.redirect('/');
+  if ( req.cookies["username"] ){
+    res.redirect('/');
+  } else {
+    res.render('register');
+  }
 });
 
 app.post("/register", (req, res) => {
-  res.redirect('/');
+  // Check user cookie
+  if ( req.cookies["username"] ){
+    res.redirect('/');
+  } else {
+    let name = req.body.name;
+    let email = req.body.email;
+    let password = req.body.password;
+    // Email or Password empty
+    if (email === '' || password === ''){
+      res.status(400);
+      res.send("Email or Password field empty. <a href='/register'>Please try again</a>.");
+    } else if ( findUserIdByEmail(email) ){
+      // User already exists
+      res.status(400);
+      res.send("Email already in use. <a href='/register'>Please try again</a>, or <a href='/login'>Login</a>");
+    } else {
+      // Create user
+      let id = generateRandomString();
+      users[id] = {
+        'id': id,
+        'name': name,
+        'email': email,
+        'password': password
+      };
+      // Set cookie for session
+      res.cookie('username', id);
+      console.log(users);
+      res.redirect('/');
+    }
+  }
 });
 
 app.post("/login", (req, res) => {
@@ -153,3 +202,12 @@ function generateRandomString() {
   return randomstring.generate(6);
 }
 
+function findUserIdByEmail(email){
+  for (let key in users){
+    //console.log(users[key]['email'].toLowerCase(), email.toLowerCase());
+    if ( users[key]['email'].toLowerCase() === email.toLowerCase() ){
+      return key;
+    }
+  }
+  return false;
+}

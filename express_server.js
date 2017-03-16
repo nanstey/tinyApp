@@ -5,12 +5,13 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+app.set("view engine", "ejs");
 
+const bcrypt = require('bcrypt');
+// const hashed_password = bcrypt.hashSync(password, 10);
 const randomstring = require("randomstring");
 
 var PORT = process.env.PORT || 8080; // default port 8080
-
-app.set("view engine", "ejs");
 
 var urlDatabase = {
   "b2xVn2": {
@@ -25,20 +26,25 @@ var urlDatabase = {
   },
 };
 
+
+
 const users = {
   "egEt9K": {
     id: "egEt9K",
     name: "Rick",
     email: "Rick@GetSchwifty.com",
-    password: "WubbaLubbaDubDub"
+    password: "$2a$10$IH8JQGn/mbJC7SYe.YwXkO2z8G1KmvWAGxJihIPEhFUGTgscUuATy"
   },
  "59tsaS": {
     id: "59tsaS",
     name: "Morty",
     email: "Morty@GetSchwifty.com",
-    password: "OhJeez"
+    password: "$2a$10$KlY/dQIauFVmqgvrsJ.Z2uZBDc1z.Zfae.QMu2OCh4cQRSgMghs4O"
   }
 }
+
+console.log( bcrypt.hashSync( "wubbalubba", 10) );
+
 
 app.get("/", (req, res) => {
   // If logged in -> homepage, else -> login page
@@ -240,11 +246,10 @@ app.post("/register", (req, res) => {
         'id': id,
         'name': name,
         'email': email,
-        'password': password
+        'password': hashPassword( req.body.password )
       };
       // Set cookie for session
       res.cookie('user_id', id);
-      console.log(users);
       res.redirect('/');
     }
   }
@@ -259,7 +264,7 @@ app.post("/login", (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
     let id = getUserIdByEmail(email);
-    if (id && password === users[id].password){
+    if ( id && checkPassword(password, id) ) {
       // User exists, password correct
       res.cookie('user_id', id);
       res.redirect('/')
@@ -293,7 +298,7 @@ app.get("*", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
 
 function generateRandomString(obj) {
@@ -332,4 +337,12 @@ function linkOwnedById(link, id){
 
 function linkExists(link){
   return urlDatabase.hasOwnProperty(link);
+}
+
+function checkPassword(password, id){
+  return bcrypt.compareSync(password, users[id].password);
+}
+
+function hashPassword(password){
+  return bcrypt.hashSync(password, 10);
 }

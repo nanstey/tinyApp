@@ -6,7 +6,11 @@
   <% } else { %>
     Something went wrong.
   <% } %>
-   Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
+  <% if ( !locals.logged_in ) { %>
+    Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
+  <% } else { %>
+    <a href="/urls">Back to browse</a>.
+  <% } %>
 </p>
 
 <%- include('partials/_footer') %>

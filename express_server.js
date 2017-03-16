@@ -13,8 +13,16 @@ var PORT = process.env.PORT || 8080; // default port 8080
 app.set("view engine", "ejs");
 
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    user: 'egEt9K',
+    shortURL: "b2xVn2",
+    longURL: "http://www.lighthouselabs.ca"
+  },
+  "9sm5xK": {
+    user: '59tsaS',
+    shortURL: "9sm5xK",
+    longURL: "http://www.google.com"
+  },
 };
 
 const users = {
@@ -38,9 +46,10 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   if (req.cookies["user_id"]){
+    let id = req.cookies["user_id"];
     let templateVars = {
-      urls: urlDatabase,
-      user: users[ req.cookies["user_id"] ]
+      urls: getLinksByUserId(id),
+      user: users[id].name
     };
     res.render("urls_index", templateVars);
   } else {
@@ -51,7 +60,8 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (req.cookies["user_id"]){
-    let templateVars = { user: users[ req.cookies["user_id"] ]  };
+    let id = req.cookies["user_id"];
+    let templateVars = { user: users[id].name  };
     res.render("urls_new", templateVars);
   } else {
     // User not logged in
@@ -61,13 +71,26 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   if ( req.cookies["user_id"] ){
-    if ( urlDatabase.hasOwnProperty(req.params.id) ) {
-      let templateVars = {
-        shortURL: req.params.id,
-        longURL: urlDatabase[req.params.id],
-        user: users[ req.cookies["user_id"] ]
-      };
-      res.render("urls_show", templateVars);
+    // Get user id and shortURL
+    let id = req.cookies["user_id"];
+    let shortURL = req.params.id;
+    if ( urlDatabase.hasOwnProperty(shortURL) ) {
+      // shortURL exists
+      let link = urlDatabase[shortURL];
+      if ( link.user === id ){
+        // Owned by current user
+        let templateVars = {
+          shortURL: link.shortURL,
+          longURL: link.longURL,
+          user: users[id].name
+        };
+        res.render("urls_show", templateVars);
+      } else {
+        // Exists but not owned by current user
+        templateVars = { error_msg: "You do not own this URL. ", logged_in: true }
+        res.status(403);
+        res.render('error', templateVars);
+      }
     } else {
       // Not found
       res.redirect('/404');
@@ -156,12 +179,12 @@ app.post("/register", (req, res) => {
     let password = req.body.password;
     // Email or Password empty
     if (email === '' || password === ''){
-      let templateVars = { error_msg: "Email or Password field empty." };
+      let templateVars = { error_msg: "Email or Password field empty.", logged_in: false };
       res.status(400);
       res.redirect('/error', templateVars);
-    } else if ( findUserIdByEmail(email) ){
+    } else if ( getUserIdByEmail(email) ){
       // User already exists
-      let templateVars = { error_msg: "Email already in use." };
+      let templateVars = { error_msg: "Email already in use.", logged_in: false };
       res.status(400);
       res.redirect('/error', templateVars);
     } else {
@@ -189,14 +212,14 @@ app.post("/login", (req, res) => {
     // Attempt login
     let email = req.body.email;
     let password = req.body.password;
-    let id = findUserIdByEmail(email);
+    let id = getUserIdByEmail(email);
     if (id && password === users[id].password){
       // User exists, password correct
       res.cookie('user_id', id);
       res.redirect('/')
     } else {
       // Email address not found, or password doesn't match
-      let templateVars = { error_msg: "Password and email don't match user." };
+      let templateVars = { error_msg: "Password and email don't match user.", logged_in: false };
       res.status(403);
       res.render('error', templateVars);
     }
@@ -231,7 +254,7 @@ function generateRandomString() {
   return randomstring.generate(6);
 }
 
-function findUserIdByEmail(email){
+function getUserIdByEmail(email){
   for (let key in users){
     //console.log(users[key]['email'].toLowerCase(), email.toLowerCase());
     if ( users[key]['email'].toLowerCase() === email.toLowerCase() ){
@@ -239,4 +262,14 @@ function findUserIdByEmail(email){
     }
   }
   return false;
+}
+
+function getLinksByUserId(id){
+  let urls = {};
+  for (let key in urlDatabase){
+    if ( urlDatabase[key].user === id ){
+      urls[key] = urlDatabase[key]
+    }
+  }
+  return urls;
 }

@@ -10,7 +10,7 @@
         <tr>
           <td><a href=/u/<%= key %>><%= key %></a></td>
           <td> &#8594;</td>
-          <td><a href=<%= urls[key] %>><%= urls[key] %></a></td>
+          <td><a href=<%= urls[key].longURL %>><%= urls[key].longURL %></a></td>
           <td><a href=/urls/<%= key %>>Edit</a></td>
           <td><form method="POST" action=/urls/<%= key %>/delete> <button type="submit">Delete</button></form> </td>
         </tr>

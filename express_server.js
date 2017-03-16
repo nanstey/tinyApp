@@ -41,11 +41,13 @@ const users = {
 }
 
 app.get("/", (req, res) => {
+  // If logged in -> homepage, else -> login page
   req.cookies["user_id"] ? res.redirect('/urls') : res.redirect('/login');
 });
 
 app.get("/urls", (req, res) => {
   if (req.cookies["user_id"]){
+    // Logged in
     let id = req.cookies["user_id"];
     let templateVars = {
       urls: getLinksByUserId(id),
@@ -60,6 +62,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (req.cookies["user_id"]){
+    // Logged in
     let id = req.cookies["user_id"];
     let templateVars = { user: users[id].name  };
     res.render("urls_new", templateVars);
@@ -71,23 +74,24 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   if ( req.cookies["user_id"] ){
+    // Logged in
     // Get user id and shortURL
     let id = req.cookies["user_id"];
     let shortURL = req.params.id;
-    if ( urlDatabase.hasOwnProperty(shortURL) ) {
+    if ( linkExists(shortURL) ) {
       // shortURL exists
-      let link = urlDatabase[shortURL];
-      if ( link.user === id ){
+      if ( linkOwnedById(shortURL, id) ){
         // Owned by current user
+        let link = urlDatabase[shortURL];
         let templateVars = {
-          shortURL: link.shortURL,
-          longURL: link.longURL,
-          user: users[id].name
+          'shortURL': link.shortURL,
+          'longURL': link.longURL,
+          'user': users[id].name
         };
         res.render("urls_show", templateVars);
       } else {
         // Exists but not owned by current user
-        templateVars = { error_msg: "You do not own this URL. ", logged_in: true }
+        let templateVars = { error_msg: "You do not own this URL. ", logged_in: true }
         res.status(403);
         res.render('error', templateVars);
       }
@@ -103,7 +107,7 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   let shortURL = req.params.id;
-  let longURL = urlDatabase[shortURL];
+  let longURL = urlDatabase[shortURL].longURL;
   if (longURL){
     res.redirect(longURL);
   } else {
@@ -114,9 +118,16 @@ app.get("/u/:id", (req, res) => {
 
 app.post("/urls", (req, res) => {
   if ( req.cookies["user_id"] ){
-    let shortURL = generateRandomString();
+    // Logged in
+    let id = req.cookies["user_id"];
     let longURL = req.body['longURL'];
-    urlDatabase[shortURL] = longURL;
+    let shortURL = generateRandomString(urlDatabase);
+    // create link obj
+    urlDatabase[shortURL] = {
+      'user': id,
+      'shortURL': shortURL,
+      'longURL': longURL
+    };
     res.redirect('/urls/' + shortURL);
   } else {
     // User not logged in
@@ -126,11 +137,30 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   if ( req.cookies["user_id"] ){
-    console.log(req.body);
+    // Logged in
+    let id = req.cookies["user_id"];
     let shortURL = req.params.id;
-    let longURL = req.body['longURL'];
-    urlDatabase[shortURL] = longURL;
-    res.redirect('/urls/');
+    if ( linkExists(shortURL) ) {
+      // Link exists
+      if ( linkOwnedById(shortURL, id) ){
+        // Linked owned by current user
+        let longURL = req.body['longURL'];
+        urlDatabase[shortURL] = {
+          'user': id,
+          'shortURL': shortURL,
+          'longURL': longURL
+        };
+        res.redirect('/urls/');
+      } else {
+        // ShortURL not owned by current user, or doesn't exist
+        let templateVars = { error_msg: "You do not own this URL. ", logged_in: true };
+        res.status(403);
+        res.render('error', templateVars);
+      }
+    } else {
+      // Link doesn't exist
+      res.redirect('/404');
+    }
   } else {
     // User not logged in
     res.redirect('/error');
@@ -139,10 +169,25 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   if ( req.cookies["user_id"] ){
-    console.log(req.body);  // debug statement to see POST parameters
+    // Logged in
+    let id = req.cookies["user_id"];
     let shortURL = req.params.id;
-    delete urlDatabase[shortURL];
-    res.redirect('/urls/');
+    if ( linkExists(shortURL) ){
+      // Link exists
+      if ( linkOwnedById(shortURL, id) ){
+        // Linked owned by current user
+        delete urlDatabase[shortURL];
+        res.redirect('/urls/');
+      } else {
+        // ShortURL not owned by current user, or doesn't exist
+        let templateVars = { error_msg: "You do not own this URL. ", logged_in: true };
+        res.status(403);
+        res.render('error', templateVars);
+      }
+    } else {
+      // Link doesn't exist
+      res.redirect('/404');
+    }
   } else {
     // User not logged in
     res.redirect('/error');
@@ -170,15 +215,16 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  // Check user cookie
   if ( req.cookies["user_id"] ){
+    // Logged in
     res.redirect('/');
   } else {
+    // Not logged in
     let name = req.body.name;
     let email = req.body.email;
     let password = req.body.password;
-    // Email or Password empty
     if (email === '' || password === ''){
+      // Email or Password empty
       let templateVars = { error_msg: "Email or Password field empty.", logged_in: false };
       res.status(400);
       res.redirect('/error', templateVars);
@@ -188,8 +234,8 @@ app.post("/register", (req, res) => {
       res.status(400);
       res.redirect('/error', templateVars);
     } else {
-      // Create user
-      let id = generateRandomString();
+      // Create user id, and user obj
+      let id = generateRandomString(users);
       users[id] = {
         'id': id,
         'name': name,
@@ -250,13 +296,16 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-function generateRandomString() {
-  return randomstring.generate(6);
+function generateRandomString(obj) {
+  let str = '';
+  do {
+    str = randomstring.generate(6);
+  } while( obj.hasOwnProperty(str) );
+  return str;
 }
 
 function getUserIdByEmail(email){
   for (let key in users){
-    //console.log(users[key]['email'].toLowerCase(), email.toLowerCase());
     if ( users[key]['email'].toLowerCase() === email.toLowerCase() ){
       return key;
     }
@@ -272,4 +321,15 @@ function getLinksByUserId(id){
     }
   }
   return urls;
+}
+
+function linkOwnedById(link, id){
+  if (urlDatabase[link].user === id){
+    return true;
+  }
+  return false;
+}
+
+function linkExists(link){
+  return urlDatabase.hasOwnProperty(link);
 }

@@ -1,3 +1,8 @@
+<%- include('partials/_header') %>
+
 <p>
-  An error occured. Please <a href="/login">login</a> before attempting to access TinyUrl
+  <%= error_msg %>
+  Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
 </p>
+
+<%- include('partials/_footer') %>

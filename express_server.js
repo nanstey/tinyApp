@@ -32,7 +32,6 @@ const users = {
   }
 }
 
-
 app.get("/", (req, res) => {
   req.cookies["user_id"] ? res.redirect('/urls') : res.redirect('/login');
 });
@@ -169,9 +168,25 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  let username = req.body.username;
-  res.cookie('username', username);
-  res.redirect('/urls/');
+  if ( req.cookies["user_id"] ){
+    // User already logged in
+    res.redirect('/');
+  } else {
+    // Attempt login
+    let email = req.body.email;
+    let password = req.body.password;
+    let id = findUserIdByEmail(email);
+    if (id && password === users[id].password){
+      // User exists, password correct
+      res.cookie('user_id', id);
+      res.redirect('/')
+    } else {
+      // Email address not found, or password doesn't match
+      let templateVars = { error_msg: "Password and email don't match user." }
+      res.status(401);
+      res.render('error', templateVars);
+    }
+  }
 });
 
 app.post("/logout", (req, res) => {

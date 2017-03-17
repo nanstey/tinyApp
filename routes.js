@@ -2,11 +2,13 @@ const data = require('./data_functions');
 
 module.exports = function(app){
 
+  // Root route
   app.get("/", (req, res) => {
     // If logged in -> homepage, else -> login page
     req.session.userId ? res.redirect('/urls') : res.redirect('/login');
   });
 
+  // List users links
   app.get("/urls", (req, res) => {
     if (req.session.userId){
       // Logged in
@@ -22,6 +24,7 @@ module.exports = function(app){
     }
   });
 
+  // Page for creating new link
   app.get("/urls/new", (req, res) => {
     if (req.session.userId){
       // Logged in
@@ -34,6 +37,7 @@ module.exports = function(app){
     }
   });
 
+  // View existing link
   app.get("/urls/:id", (req, res) => {
     if ( req.session.userId ){
       // Logged in
@@ -67,9 +71,10 @@ module.exports = function(app){
     }
   });
 
+  // Redirect from shortURL => longURL
   app.get("/u/:id", (req, res) => {
     let shortURL = req.params.id;
-    if ( linkExists(shortURL) ){
+    if ( data.linkExists(shortURL) ){
       // Link exists
       data.urlDatabase[shortURL].totalVisits++;
       if ( !req.cookies.hasOwnProperty(shortURL) ){
@@ -84,28 +89,37 @@ module.exports = function(app){
     }
   });
 
+  // Create new link
   app.post("/urls", (req, res) => {
     if ( req.session.userId ){
       // Logged in
-      let id = req.session.userId;
       let longURL = req.body['longURL'];
-      let shortURL = data.generateRandomString(data.urlDatabase);
-      // create link obj
-      data.urlDatabase[shortURL] = {
-        'user': id,
-        'shortURL': shortURL,
-        'longURL': longURL,
-        'date': data.makeDate(),
-        'totalVisits': 0,
-        'uniqueVisits': 0
-      };
-      res.redirect('/urls/' + shortURL);
+      if ( data.checkURL(longURL) ){
+        // Valid URL
+        let id = req.session.userId;
+        let shortURL = data.generateRandomString(data.urlDatabase);
+        // create link obj
+        data.urlDatabase[shortURL] = {
+          'user': id,
+          'shortURL': shortURL,
+          'longURL': longURL,
+          'date': data.makeDate(),
+          'totalVisits': 0,
+          'uniqueVisits': 0
+        };
+        res.redirect('/urls/' + shortURL);
+      } else {
+        // Invalid URL
+        let templateVars = { invalidURL: longURL };
+        res.render('urls_new', templateVars);
+      }
     } else {
       // User not logged in
       res.redirect('/error');
     }
   });
 
+  // Update existing link
   app.post("/urls/:id", (req, res) => {
     if ( req.session.userId ){
       // Logged in
@@ -119,6 +133,7 @@ module.exports = function(app){
           let date = data.urlDatabase[shortURL].date;
           let visits = data.urlDatabase[shortURL].totalVisits;
           let unique = data.urlDatabase[shortURL].uniqueVisits;
+          // Update database entry
           data.urlDatabase[shortURL] = {
             'user': id,
             'shortURL': shortURL,
@@ -144,6 +159,7 @@ module.exports = function(app){
     }
   });
 
+  // Delete existing link
   app.post("/urls/:id/delete", (req, res) => {
     if ( req.session.userId ){
       // Logged in
@@ -171,6 +187,7 @@ module.exports = function(app){
     }
   });
 
+  // Login page
   app.get("/login", (req, res) => {
     if ( req.session.userId ){
       // Logged in
@@ -181,6 +198,7 @@ module.exports = function(app){
     }
   });
 
+  // Register page
   app.get("/register", (req, res) => {
     if ( req.session.userId ){
       // Logged in
@@ -191,6 +209,7 @@ module.exports = function(app){
     }
   });
 
+  // Registers a new user
   app.post("/register", (req, res) => {
     if ( req.session.userId ){
       // Logged in
@@ -226,6 +245,7 @@ module.exports = function(app){
     }
   });
 
+  // Logs the user in
   app.post("/login", (req, res) => {
     if ( req.session.userId ){
       // User already logged in
@@ -248,11 +268,13 @@ module.exports = function(app){
     }
   });
 
+  // Logs out the user
   app.post("/logout", (req, res) => {
     req.session = null;
     res.redirect('/login');
   });
 
+  // Display error messages
   app.get("/error", (req, res) => {
     let templateVars;
     if (req.session.userId){
@@ -262,6 +284,7 @@ module.exports = function(app){
     res.render('error');
   });
 
+  // Not found
   app.get("/404", (req, res) => {
     let templateVars;
     if (req.session.userId){
@@ -272,6 +295,7 @@ module.exports = function(app){
     res.render('404', templateVars);
   });
 
+  // Catch-all redirect to 404
   app.get("*", (req, res) => {
     res.redirect("/404");
   });

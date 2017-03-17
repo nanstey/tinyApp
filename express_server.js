@@ -1,3 +1,20 @@
+//******************//
+//***  TINY APP  ***//
+//******************//
+
+// Description:
+//    A web application for creating and managing redirect shortlinks
+
+// Usage:
+//    Start the server with:   `node express_server.js`
+//    Visit the homepage at:   http://localhost:3000/
+//    Register and start making links!
+
+// Details:
+//    This file only contains the core server settings
+//    Routes are contained in `routes.js`
+//    Default data and functions contained in `data_functions.js`
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");

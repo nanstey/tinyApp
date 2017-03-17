@@ -4,18 +4,35 @@
       <a href="/urls/new">Create New Link</a>
     </div>
     &nbsp;
-    <table>
-
-      <% for (var key in urls) { %>
-        <tr>
-          <td><a href=/u/<%= key %>><%= key %></a></td>
-          <td> &#8594;</td>
-          <td><a href=<%= urls[key].longURL %>><%= urls[key].longURL %></a></td>
-          <td><a href=/urls/<%= key %>>Edit</a></td>
-          <td><form method="POST" action=/urls/<%= key %>/delete> <button type="submit">Delete</button></form> </td>
-        </tr>
-      <% } %>
-    </table>
+    <% if (Object.getOwnPropertyNames(urls).length > 0) {%>
+      <table>
+          <tr>
+            <th>Short Link</th>
+            <th></th>
+            <th>Target URL</th>
+            <th>Date Created</th>
+            <th>Visits</th>
+            <th>Unique</th>
+            <th></th>
+          </tr>
+        <% for (var key in urls) { %>
+          <tr>
+            <td><a href=/u/<%= key %> target="_blank"><%= key %></a></td>
+            <td> &#8594;</td>
+            <td><a href=<%= urls[key].longURL %>><%= urls[key].longURL %></a></td>
+            <td><%= urls[key].date %></td>
+            <td><%= urls[key].totalVisits %></td>
+            <td><%= urls[key].uniqueVisits %></td>
+            <td><a href=/urls/<%= key %>>Edit</a></td>
+            <td><form method="POST" action=/urls/<%= key %>/delete> <button type="submit">Delete</button></form> </td>
+          </tr>
+        <% } %>
+      </table>
+    <% } else {%>
+      <p>
+        No links to display...
+      </p>
+    <% } %>
 
 
 <%- include('partials/_footer.ejs') %>

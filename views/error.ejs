@@ -1,12 +1,12 @@
 <%- include('partials/_header') %>
 
 <p>
-  <% if (locals.error_msg) { %>
+  <% if (locals.errorMsg) { %>
     <%= error_msg %>
   <% } else { %>
     Something went wrong.
   <% } %>
-  <% if ( !locals.logged_in ) { %>
+  <% if ( !locals.loggedIn ) { %>
     Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
   <% } else { %>
     <a href="/urls">Back to browse</a>.

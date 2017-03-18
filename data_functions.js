@@ -1,5 +1,6 @@
 const randomstring = require("randomstring");
 const bcrypt = require('bcrypt');
+const moment = require('moment');
 
 module.exports = {
 
@@ -37,12 +38,67 @@ module.exports = {
     }
   },
 
-  generateRandomString: function(obj) {
-    let str = '';
-    do {
-      str = randomstring.generate(6);
-    } while( obj.hasOwnProperty(str) );
-    return str;
+  visitors: {
+    "kXlNVw": {
+      "WKQ9eZ": {
+        id: "WKQ9eZ",
+        timestamp: '2017/03/17 12:12:45 pm',
+        shortURL: "b2xVn2",
+        visitorId: "kXlNVw"
+      }
+    },
+    "oMY7pQ": {
+      "Q4sUny": {
+        id: "Q4sUny",
+        timestamp: '2017/03/16 11:26:29 am',
+        shortURL: "b2xVn2",
+        visitorId: "oMY7pQ"
+      }
+    },
+    "iX8Y9l": {
+      "JNyiRW": {
+        id: "JNyiRW",
+        timestamp: '2017/03/17 2:28:33 pm',
+        shortURL: "9sm5xK",
+        visitorId: "iX8Y9l"
+      },
+      "tcMuhH": {
+        id: "tcMuhH",
+        timestamp: '2017/03/16 5:15:06 pm',
+        shortURL: "9sm5xK",
+        visitorId: "iX8Y9l"
+      },
+      "Rw4RxW": {
+        id: "Rw4RxW",
+        timestamp: '2017/03/14 1:56:39 pm',
+        shortURL: "9sm5xK",
+        visitorId: "iX8Y9l"
+      }
+    },
+    "rHWJ0q": {
+      "4COUOR": {
+        id: "4COUOR",
+        timestamp: '2017/03/17 2:28:33 pm',
+        shortURL: "b2xVn2",
+        visitorId: "rHWJ0q"
+      },
+      "t11nBx": {
+        id: "t11nBx",
+        timestamp: '2017/03/16 1:28:33 pm',
+        shortURL: "b2xVn2",
+        visitorId: "rHWJ0q"
+      },
+      "H3mi4M": {
+        id: "H3mi4M",
+        timestamp: '2017/03/15 4:56:27 pm',
+        shortURL: "b2xVn2",
+        visitorId: "rHWJ0q"
+      }
+    }
+  },
+
+  generateRandomString: function() {
+    return randomstring.generate(6);
   },
 
   getUserIdByEmail: function(email) {
@@ -62,6 +118,18 @@ module.exports = {
       }
     }
     return urls;
+  },
+
+  getVisitsByLink: function(link) {
+    let visits = {};
+    for (let key in this.visitors){
+      for (let i in this.visitors[key]){
+        if ( this.visitors[key][i].shortURL === link){
+          visits[i] = this.visitors[key][i];
+        }
+      }
+    }
+    return visits;
   },
 
   linkOwnedById: function(link, id) {
@@ -87,6 +155,10 @@ module.exports = {
     return new Date().toDateString();
   },
 
+  makeTimestamp: function() {
+    return moment().utcOffset(-7).format("YYYY/MM/DD h:mm:ss a");
+  },
+
   checkURL: function(url) {
     var res = url.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
     if(res == null){
@@ -94,6 +166,6 @@ module.exports = {
     } else {
       return true;
     }
-  }
+  },
 
 };

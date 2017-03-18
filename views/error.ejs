@@ -1,17 +1,17 @@
 <%- include('partials/_header') %>
 
-<p>
-  <% if (locals.errorMsg) { %>
-    <%= errorMsg %>
-  <% } else { %>
-    Something went wrong.
-  <% } %>
+  <p>
+    <% if (locals.errorMsg) { %>
+      <%= errorMsg %>
+    <% } else { %>
+      Something went wrong.
+    <% } %>
 
-  <% if ( !locals.loggedIn ) { %>
-    Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
-  <% } else { %>
-    <a href="/urls">Back to browse</a>.
-  <% } %>
-</p>
+    <% if ( !locals.loggedIn ) { %>
+      Please <a href='/register'>Register</a>, or <a href='/login'>Login</a>.
+    <% } else { %>
+      <a href="/urls">Back to browse</a>.
+    <% } %>
+  </p>
 
 <%- include('partials/_footer') %>

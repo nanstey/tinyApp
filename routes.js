@@ -50,9 +50,9 @@ module.exports = function(app){
           // Owned by current user
           let link = data.urlDatabase[shortURL];
           let templateVars = {
-            'shortURL': link.shortURL,
-            'longURL': link.longURL,
-            'user': { 'name': data.users[id].name, 'email': data.users[id].email }
+            'link': link,
+            'user': { 'name': data.users[id].name, 'email': data.users[id].email },
+            'visits': data.getVisitsByLink(link.shortURL)
           };
           res.render("urls_show", templateVars);
         } else {
@@ -77,10 +77,30 @@ module.exports = function(app){
     if ( data.linkExists(shortURL) ){
       // Link exists
       data.urlDatabase[shortURL].totalVisits++;
+      let visitorId;
+      if (req.cookies.hasOwnProperty('visitorId')){
+        // get visitorId
+        visitorId = req.cookies['visitorId'];
+      } else {
+        // set visitorId cookie
+        visitorId = data.generateRandomString();
+        res.cookie('visitorId', visitorId);
+      }
       if ( !req.cookies.hasOwnProperty(shortURL) ){
+        // Shortlink cookie not set
         res.cookie(shortURL, 1);
         data.urlDatabase[shortURL].uniqueVisits++;
       }
+      // Create visitors entry
+      let id = data.generateRandomString();
+      data.visitors[visitorId] = {};
+      data.visitors[visitorId][id] = {
+        'id': id,
+        'timestamp': data.makeTimestamp(),
+        'shortURL': shortURL,
+        'visitorId': visitorId
+      };
+      // Redirect to longURL
       let longURL = data.urlDatabase[shortURL].longURL;
       res.redirect(longURL);
     } else {
@@ -97,7 +117,7 @@ module.exports = function(app){
       if ( data.checkURL(longURL) ){
         // Valid URL
         let id = req.session.userId;
-        let shortURL = data.generateRandomString(data.urlDatabase);
+        let shortURL = data.generateRandomString();
         // create link obj
         data.urlDatabase[shortURL] = {
           'user': id,
@@ -120,7 +140,7 @@ module.exports = function(app){
   });
 
   // Update existing link
-  app.post("/urls/:id", (req, res) => {
+  app.put("/urls/:id", (req, res) => {
     if ( req.session.userId ){
       // Logged in
       let id = req.session.userId;
@@ -160,7 +180,7 @@ module.exports = function(app){
   });
 
   // Delete existing link
-  app.post("/urls/:id/delete", (req, res) => {
+  app.delete("/urls/:id/delete", (req, res) => {
     if ( req.session.userId ){
       // Logged in
       let id = req.session.userId;
@@ -231,7 +251,7 @@ module.exports = function(app){
         res.redirect('/error', templateVars);
       } else {
         // Create user id, and user obj
-        let id = data.generateRandomString(data.users);
+        let id = data.generateRandomString();
         data.users[id] = {
           'id': id,
           'name': name,

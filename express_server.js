@@ -17,12 +17,14 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const methodOverride = require('method-override');
 const cookieParser = require("cookie-parser");
 const cookieSession = require('cookie-session');
 const app = express();
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(methodOverride('_method'));
 app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',

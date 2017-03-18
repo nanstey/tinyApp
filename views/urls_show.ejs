@@ -1,14 +1,36 @@
 <%- include('partials/_header') %>
-  <!-- Add your EJS code here -->
-  <p>
-    ShortURL: <i>http://localhost:3000/u/</i><b><%= shortURL %></b>
-  </p>
-  <form method="POST" action=/urls/<%= shortURL %>>
-    <input type="text" name="longURL" value=<%=  longURL %>>
-    <button type="submit">Update</button>
-  </form>
-  &nbsp;&nbsp;
   <div>
     <a href="/urls">Back to browse</a>
   </div>
-<%- include('partials/_footer.ejs') %>
+  &nbsp;&nbsp;
+
+  <p>
+    ShortURL: <i>http://localhost:3000/u/</i><b><%= link.shortURL %></b>
+  </p>
+  <form method="POST" action=/urls/<%= link.shortURL %>?_method=PUT>
+    <input type="text" name="longURL" value=<%=  link.longURL %>>
+    <button type="submit">Update</button>
+  </form>
+  &nbsp;&nbsp;
+
+  <div>
+    <table>
+      <tr><td>Total Views:</td><td> <b><%= link.totalVisits %></b></td></tr>
+      <tr><td>Unique Views:</td><td> <b><%= link.uniqueVisits %></b></td></tr>
+    </table>
+  </div>
+  &nbsp;&nbsp;
+
+  <table>
+    <tr>
+      <th>Visitor Id</th>
+      <th>Timestamp</th>
+    </tr>
+    <% for (let key in visits) { %>
+      <tr>
+        <td><%= visits[key].visitorId %></td>
+        <td><%= visits[key].timestamp %></td>
+      </tr>
+    <% }%>
+  </table>
+<%- include('partials/_footer') %>
